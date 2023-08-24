@@ -1,0 +1,47 @@
+#!/bin/bash
+
+# Atualiza o sistema e instala o Docker
+sudo yum -y update
+sudo yum install -y docker
+
+# Inicia e habilita o serviço Docker
+sudo systemctl start docker
+sudo systemctl enable docker
+
+# Adiciona o usuário ec2-user ao grupo docker
+sudo usermod -aG docker ec2-user
+newgrp docker
+
+# Instala o Docker Compose
+sudo wget -O /usr/local/bin/docker-compose https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)
+sudo chmod +x /usr/local/bin/docker-compose
+
+# Cria o diretório para o EFS
+sudo mkdir /efs
+
+# Monta o sistema de arquivos EFS
+sudo mount -t nfs4 -o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport fs-0163b5942968e5399.efs.us-east-1.amazonaws.com:/ /efs
+
+# Configura a montagem automática do EFS no fstab
+echo 'fs-0163b5942968e5399.efs.us-east-1.amazonaws.com:/  /mnt/efs  nfs4  defaults,_netdev  0  0' | sudo tee -a /etc/fstab
+
+# Entra no diretório do EFS e inicia os contêineres com Docker Compose
+cd /efs
+docker-compose up -d
+
+
+version: '2.2'
+services:
+  wordpress:
+    image: wordpress:latest
+    volumes:
+      - ./config/php.upload.ini:/usr/local/etc/php/conf.d/uploads.ini
+      - ./up-app:/var/www/html
+    environment:
+      - TZ: America/Sao_Paulo
+      - WORDPRESS_DB_HOST: mysql-pb.cqayvugunbqk.us-east-1.rds.amazonaws.com
+      - WORDPRESS_DB_NAME: mysql-pb
+      - WORDPRESS_DB_USER: moni
+      - WORDPRESS_DB_PASSWORD: coop2020
+    ports:
+      - 80:80
