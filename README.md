@@ -37,3 +37,6 @@ O SG do EFS deve conter a seguinte Regra de Entrada:
 # EC2 - Criando uma instância
 
 Abra o menu de criação do EC2 no seu console AWS e vá em Launch Instance, feito isso siga os passos de criação do seu EC2 (nome, KeyPair, tipo, sistema operacional, storage) e selecione o Security Group criado para o EC2.
+
+
+- Codigo
